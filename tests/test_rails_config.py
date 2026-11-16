@@ -214,6 +214,21 @@ def test_rails_config_from_path_yml_extension():
         assert config.sample_conversation is not None
 
 
+def test_rails_config_from_path_loads_files_whose_names_start_with_kb(tmp_path):
+    """Only the kb folder holds knowledge base documents; other files starting with "kb" are config files."""
+    (tmp_path / "kb").mkdir()
+    (tmp_path / "kb" / "doc.md").write_text("# Doc\n\nSome content.\n")
+    (tmp_path / "config.yml").write_text("models: []\n")
+    (tmp_path / "kbase.yml").write_text("sample_conversation: kbase conversation\n")
+    (tmp_path / "kb_flows.co").write_text('define user ask kbase\n  "what is in the kb"\n')
+
+    config = RailsConfig.from_path(str(tmp_path))
+
+    assert config.sample_conversation == "kbase conversation"
+    assert list(config.user_messages) == ["ask kbase"]
+    assert [doc.content for doc in config.docs] == ["# Doc\n\nSome content.\n"]
+
+
 def test_rails_config_parse_obj():
     """Test parsing RailsConfig from object."""
 

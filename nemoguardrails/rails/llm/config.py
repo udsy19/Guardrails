@@ -921,7 +921,7 @@ def _load_path(
                 rel_path = os.path.relpath(full_path, config_path)
 
                 # If it's a file in the `kb` folder we need to append it to the docs
-                if rel_path.startswith("kb"):
+                if rel_path.split(os.sep)[0] == "kb":
                     _raw_config = {"docs": []}
                     if rel_path.endswith(".md"):
                         with open(full_path, encoding="utf-8") as f:
