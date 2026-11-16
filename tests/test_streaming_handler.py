@@ -436,6 +436,30 @@ async def test_multiple_stop_tokens():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "chunks, stop, suffix, expected",
+    [
+        (["Hello", " world\nUser: next"], ["\nUser"], None, "Hello world"),
+        (["Hello", ' world"\nUser: next'], ["\nUser"], '"', "Hello world"),
+        (["a B b A c"], ["A", "B"], None, "a "),
+    ],
+    ids=["stop", "stop-with-suffix", "later-stop-before-earlier-one"],
+)
+async def test_completion_matches_streamed_text_when_a_chunk_contains_a_stop_token(chunks, stop, suffix, expected):
+    handler = StreamingHandler()
+    handler.stop = stop
+    handler.set_pattern(suffix=suffix)
+
+    for chunk in chunks:
+        await handler.push_chunk(chunk)
+    await handler.finish()
+
+    streamed = [chunk async for chunk in handler]
+    assert "".join(streamed) == expected
+    assert handler.completion == expected
+
+
+@pytest.mark.asyncio
 async def test_stop_none_does_not_raise():
     handler = StreamingHandler()
     consumer = StreamingConsumer(handler)

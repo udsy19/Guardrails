@@ -266,6 +266,9 @@ class StreamingHandler(AsyncIterator):
                         # We push that as well.
                         if len(self.completion) > len(prev_completion):
                             self.current_chunk = self.completion[len(prev_completion) :]
+                            # Pushing END_OF_STREAM processes current_chunk again, which appends it
+                            # to the completion a second time.
+                            self.completion = prev_completion
                             await self.push_chunk(END_OF_STREAM)
                         # And we stop the streaming
                         self.streaming_finished_event.set()
